@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Background Music Test</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5; /* 更改为柔和的灰白色背景 */
+            font-family: Arial, sans-serif;
+            perspective: 1500px;
+        }
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 75vw; /* 设置容器最大宽度为视窗宽度的75% */
+            margin: 0 auto;
+        }
+        .music-control {
+            margin: 20px 10px; /* 修改左右边距 */
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: calc(0.8vw + 0.8em);
+        }
+        .music-control:hover {
+            background-color: #45a049;
+        }
+        
+        /* 修改书本和页面样式 */
+        .book {
+            width: 100%;
+            height: 80vh;
+            position: relative;
+            margin: 20px auto;
+            transform-style: preserve-3d;
+        }
+        
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #f0d6a3; /* 更深的黄色背景，像旧纸张 */
+            border: 1px solid #d4b483;
+            transform-origin: left center;
+            transition: transform 1s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            box-shadow: 
+                inset 0 0 30px rgba(139, 69, 19, 0.2),  /* 内阴影 */
+                2px 2px 15px rgba(0,0,0,0.1);           /* 外阴影 */
+            z-index: 1; /* 确保在封面之下 */
+        }
+        
+        /* 调整做旧效果的颜色 */
+        .page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(165, 128, 77, 0.2) 2px, transparent 4px),
+                radial-gradient(circle at 80% 70%, rgba(165, 128, 77, 0.2) 2px, transparent 4px),
+                radial-gradient(circle at 50% 50%, rgba(165, 128, 77, 0.2) 2px, transparent 4px);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        
+        /* 恢复边缘破损效果 */
+        .page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, transparent 98%, rgba(139, 69, 19, 0.2) 100%),
+                linear-gradient(-45deg, transparent 98%, rgba(139, 69, 19, 0.2) 100%),
+                linear-gradient(135deg, transparent 98%, rgba(139, 69, 19, 0.2) 100%),
+                linear-gradient(-135deg, transparent 98%, rgba(139, 69, 19, 0.2) 100%);
+            pointer-events: none;
+        }
+        
+        .page-content {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            padding: 5vh 3vw;
+            box-sizing: border-box;
+            overflow-y: auto;
+            color: #4a4a4a;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
+        }
+        
+        /* 保持标题样式 */
+        .page-content h2 {
+            color: #8b4513;
+            border-bottom: 2px solid rgba(139, 69, 19, 0.2);
+            padding-bottom: 10px;
+            margin-bottom: 3vh;
+            font-family: 'Times New Roman', serif;
+        }
+        
+        /* 保持纸张纹理效果 */
+        .page-content::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/png;base64,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');
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        /* 修改翻页效果 */
+        .page {
+            transform-style: preserve-3d;
+        }
+
+        .page.flipped {
+            transform: rotateY(-180deg);
+        }
+        
+        .page-back {
+            transform: rotateY(180deg);
+            background: #f0d6a3; /* 使用和纸张一样的淡黄色 */
+            border: 1px solid #d4b483;
+            box-shadow: 
+                inset 0 0 30px rgba(139, 69, 19, 0.2),  /* 内阴影 */
+                2px 2px 15px rgba(0,0,0,0.1);           /* 外阴影 */
+        }
+
+        /* 为背面添加和正面一样的纸张纹理效果 */
+        .page-back::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(165, 128, 77, 0.2) 2px, transparent 4px),
+                radial-gradient(circle at 80% 70%, rgba(165, 128, 77, 0.2) 2px, transparent 4px),
+                radial-gradient(circle at 50% 50%, rgba(165, 128, 77, 0.2) 2px, transparent 4px);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* 为背面添加和正面一样的边缘破损效果 */
+        .page-back::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, transparent 98%, rgba(139, 69, 19, 0.2) 100%),
+                linear-gradient(-45deg, transparent 98%, rgba(139, 69, 19, 0.2) 100%),
+                linear-gradient(135deg, transparent 98%, rgba(139, 69, 19, 0.2) 100%),
+                linear-gradient(-135deg, transparent 98%, rgba(139, 69, 19, 0.2) 100%);
+            pointer-events: none;
+        }
+
+        /* 樱花容器样式 */
+        .cherry-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999; /* 确保在最前面 */
+        }
+
+        /* 樱花样式 */
+        .cherry {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ffd1dc;
+            border-radius: 12px 1px;
+            opacity: 0.7;
+            animation: cherryFall 15s linear infinite;
+            transform-origin: 0% 0%;
+        }
+
+        /* 为每个樱花设置不同的起始位置和动画延迟 */
+        .cherry:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .cherry:nth-child(2) { left: 20%; animation-delay: 1s; }
+        .cherry:nth-child(3) { left: 30%; animation-delay: 2s; }
+        .cherry:nth-child(4) { left: 40%; animation-delay: 3s; }
+        .cherry:nth-child(5) { left: 50%; animation-delay: 4s; }
+        .cherry:nth-child(6) { left: 60%; animation-delay: 5s; }
+        .cherry:nth-child(7) { left: 70%; animation-delay: 6s; }
+        .cherry:nth-child(8) { left: 80%; animation-delay: 7s; }
+        .cherry:nth-child(9) { left: 90%; animation-delay: 8s; }
+        .cherry:nth-child(10) { left: 15%; animation-delay: 9s; }
+        .cherry:nth-child(11) { left: 25%; animation-delay: 1.5s; }
+        .cherry:nth-child(12) { left: 35%; animation-delay: 2.5s; }
+        .cherry:nth-child(13) { left: 45%; animation-delay: 3.5s; }
+        .cherry:nth-child(14) { left: 55%; animation-delay: 4.5s; }
+        .cherry:nth-child(15) { left: 65%; animation-delay: 5.5s; }
+
+        /* 为不同的樱花设置不同的大小 */
+        .cherry:nth-child(even) {
+            width: 8.8px;   /* 增加10% */
+            height: 8.8px;  /* 增加10% */
+            opacity: 0.6;
+        }
+        .cherry:nth-child(3n) {
+            width: 15.4px;  /* 增加10% */
+            height: 15.4px; /* 增加10% */
+            opacity: 0.8;
+        }
+
+        /* 樱花飘落动画 */
+        @keyframes cherryFall {
+            0% {
+                top: -10%;
+                transform: rotate(0deg);
+            }
+            100% {
+                top: 100%;
+                transform: rotate(180deg);
+            }
+        }
+
+        /* 增强樱花左右飘动效果 */
+        @keyframes cherrySwing {
+            0% {
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+            25% {
+                margin-left: 50px;
+                margin-top: 15px;
+            }
+            50% {
+                margin-left: 0px;
+                margin-top: 25px;
+            }
+            75% {
+                margin-left: -50px;
+                margin-top: 15px;
+            }
+            100% {
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+        }
+
+        /* 组合动画效果 */
+        .cherry {
+            animation: 
+                cherryFall 15s linear infinite,
+                cherrySwing 5s ease-in-out infinite;
+        }
+
+        /* 添加图文布局相关样式 */
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .image-container {
+            flex: 0 0 45%;  /* 稍微增加宽度比例 */
+            max-width: 400px;
+        }
+
+        /* 添加图片网格布局 */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .image-grid img {
+            width: 100%;
+            height: 150px; /* 固定高度确保整齐 */
+            object-fit: cover; /* 确保图片填充整个空间 */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .image-grid img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .text-container {
+            flex: 1;
+            padding-left: 20px;
+        }
+
+        /* 修改封面样式，确保只在最顶层显示一次 */
+        .cover {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            z-index: 1000; /* 确保在所有页面之上 */
+            transform-origin: left;
+            transition: transform 2s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            pointer-events: auto; /* 确保可以点击 */
+        }
+
+        .door {
+            position: relative;
+            width: 80%;
+            height: 90%;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .door::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                rgba(255,255,255,0.9) 0%,
+                rgba(255,255,255,0.1) 50%,
+                rgba(255,255,255,0.9) 100%
+            );
+        }
+
+        .door-content {
+            text-align: center;
+            color: #333;
+            padding: 20px;
+            z-index: 1;
+        }
+
+        .door-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-family: "Times New Roman", serif;
+            color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .door-subtitle {
+            font-size: 1.2em;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+
+        .door-decoration {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .door-decoration::before,
+        .door-decoration::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .door-decoration::before {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .door-decoration::after {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .cover.open {
+            transform: rotateY(-180deg);
+            pointer-events: none; /* 打开后禁用点击 */
+        }
+
+        /* 只为第一页添加门的样式 */
+        #page1 {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+        }
+
+        #page1 .door {
+            position: relative;
+            width: 80%;
+            height: 90%;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin: auto;
+        }
+
+        #page1 .door::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                rgba(255,255,255,0.9) 0%,
+                rgba(255,255,255,0.1) 50%,
+                rgba(255,255,255,0.9) 100%
+            );
+        }
+
+        #page1 .door-content {
+            text-align: center;
+            color: #333;
+            padding: 20px;
+            z-index: 1;
+        }
+
+        #page1 .door-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-family: "Times New Roman", serif;
+            color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #page1 .door-subtitle {
+            font-size: 1.2em;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+
+        #page1 .door-decoration {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #page1 .door-decoration::before,
+        #page1 .door-decoration::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e0e0e0;
+        }
+
+        #page1 .door-decoration::before {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        #page1 .door-decoration::after {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
+        }
+
+        /* 第三章特殊的图片网格样式 */
+        .chapter3-image-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .chapter3-image-grid img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+        }
+
+        .chapter3-image-grid img:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+
+        /* 为每个图片设置不同的动画延迟 */
+        .chapter3-image-grid img:nth-child(1) { animation-delay: 0.2s; }
+        .chapter3-image-grid img:nth-child(2) { animation-delay: 0.4s; }
+        .chapter3-image-grid img:nth-child(3) { animation-delay: 0.6s; }
+        .chapter3-image-grid img:nth-child(4) { animation-delay: 0.8s; }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 调整第三章的文字容器样式 */
+        #page5 .text-container {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        #page5 .text-container p {
+            margin: 10px 0;
+            color: #4a4a4a;
+        }
+
+        /* 第四章特殊的图片网格样式 */
+        .chapter4-image-grid {
+            display: grid;
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
+            padding: 15px;
+        }
+
+        .chapter4-image-grid img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .chapter4-image-grid img:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        /* 调整第四章的文字容器样式 */
+        #page6 .text-container {
+            flex: 1;
+            padding: 20px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #page6 .text-container p {
+            margin: 8px 0;
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #4a4a4a;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
+        }
+
+        /* 第五章特殊的角落图片布局 */
+        .chapter5-layout {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .chapter5-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 60%;
+            z-index: 2;
+            background: rgba(240, 214, 163, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .corner-image {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            transition: all 0.3s ease;
+        }
+
+        .corner-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .corner-image:hover img {
+            transform: scale(1.1);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .top-left {
+            top: 20px;
+            left: 20px;
+            transform: rotate(-5deg);
+        }
+
+        .top-right {
+            top: 20px;
+            right: 20px;
+            transform: rotate(5deg);
+        }
+
+        .middle-left {
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%) rotate(-3deg);
+        }
+
+        .middle-right {
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%) rotate(3deg);
+        }
+
+        .bottom-left {
+            bottom: 20px;
+            left: 20px;
+            transform: rotate(5deg);
+        }
+
+        .bottom-right {
+            bottom: 20px;
+            right: 20px;
+            transform: rotate(-5deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>背景音乐测试页面</h1>
+        <div class="book">
+            <!-- 修改第一页的内容和样式 -->
+            <div class="page" id="page1">
+                <div class="page-content">
+                    <div class="door">
+                        <div class="door-decoration"></div>
+                        <div class="door-content">
+                            <h1 class="door-title">嘟嘟的梦</h1>
+                            <p class="door-subtitle">打开，是为了找到过去的自己</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第一页的背面内容 -->
+                </div>
+            </div>
+             
+
+            <div class="page" id="page2">
+                <div class="page-content">
+                    <h2>第零章</h2>
+                    <p>如果梦永远是梦，那该多好呢？那样，我们就能永远在一起了。</p>
+                    <p></p>
+                    <p></p>
+                    <p>————dudu</p>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第四页的背面内容 -->
+                </div>
+            </div>
+            
+            <div class="page" id="page3">
+                <div class="page-content">
+                    <h2>第一章 夏日的阳光</h2>
+                    <div class="content-wrapper">
+                        <div class="image-container">
+                            <div class="image-grid">
+                                <img src="./Image/chap1/472ab09698b35cbe3333e97b122cc9c.jpg" alt="章节图片1">
+                                <img src="./Image/chap1/3f9a91ca1da53a1bb04cbc269b44dc4.jpg" alt="章节图片2">
+                                <img src="./Image/chap1/7ac9445007741f03317efd446000f7e.jpg" alt="章节图片3">
+                                <img src="./Image/chap1/89b800e7ff49e6277cafa8532fd6981.jpg" alt="章节图片4">
+                            </div>
+                        </div>
+                        <div class="text-container">
+                            <p>这是我们第一次相识，</p>
+                            <p>你的光芒驱散了夏日的阳光，</p>
+                            <p>照亮了我，</p>
+                            <p>如今我依然记得</p>
+                            <p>你那温柔的笑容</p>
+                            <p>和那双明亮的眼睛</p>
+                            <p>它们如同星辰般闪烁</p>
+                            <p>照亮了我的世界</p>
+                            <p>你的声音如同春风般温暖</p>
+                            <p>轻轻拂过我的耳畔</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第二页的背面内容 -->
+                </div>
+            </div>
+            
+            <div class="page" id="page4">
+                <div class="page-content">
+                    <h2>第二章 第一次别离，最后一次相遇</h2>
+                    <div class="content-wrapper">
+                        <div class="image-container">
+                            <div class="image-grid" style="grid-template-columns: 1fr;">  <!-- 修改为单列 -->
+                                <img src="./Image/chap2/f15eacc0715608c7b07c07aa03190d5.jpg" alt="分别的场景" style="
+                                    width: 100%;
+                                    height: 400px;  /* 增加高度 */
+                                    object-fit: cover;
+                                    border-radius: 12px;
+                                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                                    margin-bottom: 20px;  /* 添加底部间距 */
+                                ">
+                            </div>
+                        </div>
+                        <div class="text-container">
+                            <p>时间很快，</p>
+                            <p>你我都知道夏天不会一直持续，</p>
+                            <p>很快我们便分别了，</p>
+                            <p>如今想来，</p>
+                            <p>这一别也算是永别了</p>
+                            <p>我把你弄丢了</p>
+                            <p>把你弄丢了</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第四页的背面内容 -->
+                </div>
+            </div>
+            
+            <div class="page" id="page5">
+                <div class="page-content">
+                    <h2>第三章 可爱的你</h2>
+                    <div class="content-wrapper">
+                        <div class="text-container">
+                            <p>可你依然那么可爱，</p>
+                            <p>爱笑的你，</p>
+                            <p>满眼都是你，</p>
+                            <p>镜子里的你，</p>
+                            <p>是我最美的回忆</p>
+                        </div>
+                        <div class="chapter3-image-grid">
+                            <img src="./Image/chap3/00163c6f648caf2a55c131722600e98.jpg" alt="可爱的你1" class="fade-in">
+                            <img src="./Image/chap3/1be3a14179d3648f8da8660c9413f8f.jpg" alt="可爱的你2" class="fade-in">
+                            <img src="./Image/chap3/47aa3cc789543201a1cddf2db3655a0.jpg" alt="可爱的你3" class="fade-in">
+                            <img src="./Image/chap3/ebfd2568c238632a96516479b849762.jpg" alt="可爱的你4" class="fade-in">
+                        </div>
+                    </div>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第五页的背面内容 -->
+                </div>
+            </div>
+            
+            <div class="page" id="page6">
+                <div class="page-content">
+                    <h2>第四章 我们的优势</h2>
+                    <div class="content-wrapper">
+                        <div class="text-container">
+                            <p>我知道，这份幸福不会属于我。</p>
+                            <p>我们总是争吵，</p>
+                            <p>但是那时我们坚信，</p>
+                            <p>你我最合适的地方就是，</p>
+                            <p>永远不会分开。</p>
+                            <p>我们都以为，</p>
+                            <p>故事会一直写下去。</p>
+                        </div>
+                        <div class="image-container">
+                            <div class="chapter4-image-grid">
+                                <img src="./Image/chap4/92116ce074947b41e7cbaffeeb810f2.jpg" alt="第四章图片1">
+                                <img src="./Image/chap4/f2f0d1f9847bb950abda7ca35270abc.jpg" alt="第四章图片2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第六页的背面内容 -->
+                </div>
+            </div>
+            
+            <div class="page" id="page7">
+                <div class="page-content">
+                    <h2>第五章 最美的风景</h2>
+                    <div class="chapter5-layout">
+                        <div class="corner-image top-left">
+                            <img src="./Image/chap5/03e3b4fc05ab8ccd118163d3e0ced2a.jpg" alt="角落图片1">
+                        </div>
+                        <div class="corner-image top-right">
+                            <img src="./Image/chap5/14c131dc42479c455fcf636dac0cf72.jpg" alt="角落图片2">
+                        </div>
+                        <div class="chapter5-text">
+                            <p>我们当然有过许多甜蜜。</p>
+                            <p>无论是飞天的小狗，还是一脸问号的莎莉鸭。</p>
+                            <p>那是我见过最美的风景。</p>
+                        </div>
+                        <div class="corner-image middle-left">
+                            <img src="./Image/chap5/66d743d36b35beeba82342d8d690234.jpg" alt="角落图片3">
+                        </div>
+                        <div class="corner-image middle-right">
+                            <img src="./Image/chap5/706085d15e0b1f8e8659c9659dcf132.jpg" alt="角落图片4">
+                        </div>
+                        <div class="corner-image bottom-left">
+                            <img src="./Image/chap5/7a95aa7ed26d2609b658913cd106d08.jpg" alt="角落图片5">
+                        </div>
+                        <div class="corner-image bottom-right">
+                            <img src="./Image/chap5/c5e97da41183c3344090dbb311be519.jpg" alt="角落图片6">
+                        </div>
+                    </div>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第七页的背面内容 -->
+                </div>
+            </div>
+            
+            <div class="page" id="page8">
+                <div class="page-content">
+                    <h2>第六章 喜欢老虎的特种兵</h2>
+                    <div class="content-wrapper">
+                        <div class="image-container" style="flex: 1; padding: 10px;">
+                            <img src="./Image/chap6/1417ee7969d5bf7780e493789c8f511.jpg" alt="左侧图片" style="
+                                width: 100%;
+                                height: 300px;
+                                object-fit: cover;
+                                border-radius: 12px;
+                                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                                transition: transform 0.3s ease;
+                            ">
+                        </div>
+                        <div class="text-container" style="flex: 1; padding: 20px;">
+                            <p>当你化作特种兵来到我的身边，</p>
+                            <p>可我却忙于考试，仅能带你参观学校和动物园，</p>
+                            <p>至今我都忘不了那天的老虎，</p>
+                            <p>可爱的你。</p>
+                        </div>
+                        <div class="image-container" style="flex: 1; padding: 10px;">
+                            <img src="./Image/chap6/a3a10b14a54be719adddb495b89334e.jpg" alt="右侧图片" style="
+                                width: 100%;
+                                height: 300px;
+                                object-fit: cover;
+                                border-radius: 12px;
+                                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                                transition: transform 0.3s ease;
+                            ">
+                        </div>
+                    </div>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第八页的背面内容 -->
+                </div>
+            </div>
+
+            <div class="page" id="page9">
+                <div class="page-content">
+                    <h2>第七章 飞机</h2>
+                    <p>小蛋子飞往英国，</p>
+                    <p>小嘟嘟只能留守淄博，</p>
+                    <p>我们的见面越来越少了。</p>
+                    <p>但是我为你开心，</p>
+                    <p>因为这是你的梦想。</p>
+                    
+                    <img src="./Image/chap7/b8fe8bd795983e5687bf60e96965adc.jpg" alt="飞机" style="
+                        width: 80%;
+                        height: 300px;
+                        object-fit: cover;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                        margin: 20px auto;
+                        display: block;
+                        transition: transform 0.3s ease;
+                    ">
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第八页的背面内容 -->
+                </div>
+            </div>
+
+            <div class="page" id="page10">
+                <div class="page-content">
+                    <h2>第八章 渺小的蛋子</h2>
+                    <div class="content-wrapper">
+                        <div class="image-container" style="flex: 1; padding: 10px;">
+                            <img src="./Image/chap8/cfcb090811a58f7a4514e37344ce891.jpg" alt="左侧图片" style="
+                                width: 100%;
+                                height: 300px;
+                                object-fit: cover;
+                                border-radius: 12px;
+                                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                                transition: transform 0.3s ease;
+                            ">
+                        </div>
+                        <div class="text-container" style="flex: 1; padding: 20px;">
+                            <p>我依然记得当时在杭州广场，</p>
+                            <p>你对我委屈的话。</p>
+                            <p>你说人太多，</p>
+                            <p>小蛋子找不到自己了。</p>
+                            <p>现在想来，</p>
+                            <p>我真想给自己一拳。</p>
+                            <p>我明明可以告诉你，</p>
+                            <p>我永远会把你找出来，</p>
+                            <p>哪怕人再多，</p>
+                            <p>你再远。</p>
+                        </div>
+                        <div class="image-container" style="flex: 1; padding: 10px;">
+                            <img src="./Image/chap8/b2109699b4d443ff596f805ec5e909e.jpg" alt="右侧图片" style="
+                                width: 100%;
+                                height: 300px;
+                                object-fit: cover;
+                                border-radius: 12px;
+                                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                                transition: transform 0.3s ease;
+                            ">
+                        </div>
+                    </div>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第八页的背面内容 -->
+                </div>
+            </div>
+
+            <div class="page" id="page11">
+                <div class="page-content">
+                    <h2>第九章 我心中的教授</h2>
+                    <div class="content-wrapper">
+                        <div class="text-container">
+                            <p>后来，</p>
+                            <p>我们过年期间就只见了一次，</p>
+                            <p>我总想为你做点什么，</p>
+                            <p>却好似这个网页，</p>
+                            <p>总也做不好。</p>
+                        </div>
+                        <div class="image-container">
+                            <img src="./Image/chap9/img.png" alt="教授照片" style="
+                                width: 100%;
+                                height: 400px;
+                                object-fit: cover;
+                                border-radius: 12px;
+                                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                                transition: transform 0.3s ease;
+                            ">
+                        </div>
+                    </div>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第八页的背面内容 -->
+                </div>
+            </div>
+
+            <div class="page" id="page12">
+                <div class="page-content">
+                    <h2>第十章 咸的，是汗水还是泪水</h2>
+                    <p>又是一年夏日，</p>
+                    <p>听闻你要去新加坡，</p>
+                    <p>可是保研失利的我，</p>
+                    <p>却只能忙于考雅思，</p>
+                    <p>经济和学业的压力压得我喘不过气，</p>
+                    <p>我再一次放弃陪伴你，</p>
+                    <p>可我心底为你开心，</p>
+                    <p>你在我眼中一直是最棒的学生，</p>
+                    <p>你总会走的很远</p>  
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第八页的背面内容 -->
+                </div>
+            </div>
+
+            <div class="page" id="page13">
+                <div class="page-content">
+                    <h2>第十一章 秋天来了</h2>
+                    <p>当我听到你毅然决然的和我分手，</p>
+                    <p>我真的很伤心，</p>
+                    <p>可是幼稚的我，</p>
+                    <p>不想认错，</p>
+                    <p>嘴硬说自己没有伤心过，</p>
+                    <p>我怎么可能不伤心呢？</p>
+                    <p>哭了一整天的我，</p>
+                    <p>怎么可能不爱你呢？</p>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第八页的背面内容 -->
+                </div>
+            </div>
+
+            <div class="page" id="page14">
+                <div class="page-content">
+                    <h2>第十二章 嘟嘟的梦</h2>
+                    <p>昨晚，</p>
+                    <p>我又梦到了你，</p>
+                    <p>你还是那么漂亮，</p>
+                    <p>安静的坐在我右边，</p>
+                    <p>微笑的朝我打招呼。</p>
+                    <p>可是现实就是这么残酷，</p>
+                    <p>正当我想和你说些什么的时候，</p>
+                    <p>我的闹钟响了。</p>
+                    <p>我最终还是得面对没有你的生活，</p>
+                    <p>你的微笑永远停留在我的梦里了。</p>
+                    
+                    <img src="./Image/chap12/d641ade3633bb5fb5c684b057982737.jpg" alt="梦境照片" style="
+                        width: 30%;  /* 减小宽度 */
+                        height: 400px;  /* 增加高度 */
+                        object-fit: cover;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                        margin: 20px;
+                        float: left;
+                        transition: transform 0.3s ease;
+                    ">
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第八页的背面内容 -->
+                </div>
+            </div>
+
+            <div class="page" id="page15">
+                <div class="page-content">
+                    <h2>宜格</h2>
+                    <p>我们能和好吗？</p>
+                    <p>能否给我个机会，</p>
+                    <p>让我重新认识你，</p>
+                    <p>好吗，</p>
+                    <p>宜格小姐。</p>
+                </div>
+                <div class="page-content page-back">
+                    <!-- 第八页的背面内容 -->
+                </div>
+            </div>
+
+        </div>
+        
+        <audio id="bgMusic" autoplay loop>
+            <source src="./audio/if_love_forgot.mp3" type="audio/mp3">
+            您的浏览器不支持音频元素。
+        </audio>
+
+        <button class="music-control" onclick="previousPage()">上一页</button>
+        <button class="music-control" onclick="togglePage()">下一页</button>
+    </div>
+
+    <div class="cherry-container">
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+        <div class="cherry"></div>
+    </div>
+
+    <script>
+        var music = document.getElementById('bgMusic');
+        var currentPage = 1;
+        var pages = document.querySelectorAll('.page');
+        var musicStarted = false;
+        
+        // 修改初始化页面位置的函数
+        function initializePages() {
+            pages.forEach((page, index) => {
+                page.style.zIndex = pages.length - index;
+            });
+        }
+
+        // 添加上一页功能
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                var page = document.getElementById('page' + currentPage);
+                page.classList.remove('flipped');
+                
+                // 更新z-index
+                page.style.zIndex = pages.length - currentPage + 1;
+                
+                // 播放翻页音效
+                var flipSound = new Audio('flip.mp3');
+                flipSound.play().catch(e => console.log('翻页音效播放失败'));
+            }
+        }
+
+        function togglePage() {
+            // 如果音乐还没开始播放，先开始播放音乐
+            if (!musicStarted) {
+                music.volume = 0.1;
+                music.muted = false;
+                music.play().then(function() {
+                    console.log("音乐播放成功");
+                    musicStarted = true;
+                }).catch(function(error) {
+                    console.log("音乐播放失败:", error);
+                });
+            }
+
+            // 翻页逻辑
+            if (currentPage < pages.length) {
+                var page = document.getElementById('page' + currentPage);
+                page.classList.add('flipped');
+                
+                // 更新z-index，确保翻过的页面保持在正确的层级
+                page.style.zIndex = pages.length - currentPage;
+                
+                currentPage++;
+                
+                // 播放翻页音效
+                var flipSound = new Audio('flip.mp3');
+                flipSound.play().catch(e => console.log('翻页音效播放失败'));
+            }
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('load', initializePages);
+
+        // 添加樱花生成逻辑
+        function createCherryBlossoms() {
+            const container = document.querySelector('.cherry-container');
+            
+            setInterval(() => {
+                const cherry = document.createElement('div');
+                cherry.className = 'cherry';
+                cherry.style.left = Math.random() * 100 + '%';
+                container.appendChild(cherry);
+                
+                setTimeout(() => {
+                    cherry.remove();
+                }, 15000);
+            }, 300);
+        }
+
+        // 页面加载后启动樱花效果
+        window.addEventListener('load', createCherryBlossoms);
+
+        // 添加封面打开逻辑
+        document.getElementById('cover').addEventListener('click', function() {
+            this.classList.add('open');
+            // 播放翻页音效
+            var flipSound = new Audio('flip.mp3');
+            flipSound.play().catch(e => console.log('翻页音效播放失败'));
+            
+            // 开始播放背景音乐
+            if (!musicStarted) {
+                music.volume = 0.1;
+                music.muted = false;
+                music.play().then(function() {
+                    console.log("音乐播放成功");
+                    musicStarted = true;
+                }).catch(function(error) {
+                    console.log("音乐播放失败:", error);
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
